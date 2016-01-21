@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
-#include "bcm2835.h"
+#include <usbasp/usbasp_spi.h>
 #include "rc522.h"
 #include "main.h"
 
@@ -271,7 +271,7 @@ uint8_t ReadRawRC(uint8_t Address)
 {
 	char buff[2];
 	buff[0] = ((Address<<1)&0x7E)|0x80;
-	bcm2835_spi_transfern(buff,2);
+	usbasp_spi_transfern(buff,2);
 	return (uint8_t)buff[1];
 }
 
@@ -281,7 +281,7 @@ void WriteRawRC(uint8_t Address, uint8_t value)
 
 	buff[0] = (char)((Address<<1)&0x7E);
 	buff[1] = (char)value;
-	bcm2835_spi_transfern(buff,2);
+	usbasp_spi_transfern(buff,2);
 }
 
 void SetBitMask(uint8_t   reg,uint8_t   mask)
@@ -348,7 +348,7 @@ char PcdComMF522(uint8_t   Command,
 	do
 	{
 		usleep(200);
-		//		bcm2835_delayMicroseconds(200);
+		//		usbasp_delayMicroseconds(200);
 		n = ReadRawRC(ComIrqReg);
 		i--;
 	}

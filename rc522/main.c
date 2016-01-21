@@ -12,15 +12,15 @@
 #include <syslog.h>
 #include <sys/wait.h>
 #include <signal.h>
+#include <usbasp/usbasp_spi.h>
 #include "rfid.h"
-#include "bcm2835.h"
 #include "config.h"
 
 uint8_t HW_init(uint32_t spi_speed, uint8_t gpio);
 void usage(char *);
 char *KeyA="Test01";
 char *KeyB="Test10";
-uint8_t debug=0;
+uint8_t debug=1;
 
 
 int main(int argc, char *argv[]) {
@@ -115,7 +115,7 @@ int main(int argc, char *argv[]) {
 		*(p++)=']';
 		*(p++)=0;
 
-		if (use_gpio) bcm2835_gpio_write(gpio, HIGH);
+		if (use_gpio) usbasp_gpio_write(gpio, HIGH);
 		//ищем SN в конфиге
 		if (find_config_param(sn_str,str,sizeof(str),1)>0) {
 			child=fork();
@@ -157,7 +157,7 @@ int main(int argc, char *argv[]) {
 					break;
 				case 0x0400:
 					PcdHalt();
-					if (use_gpio) bcm2835_gpio_write(gpio, LOW);
+					if (use_gpio) usbasp_gpio_write(gpio, LOW);
 					continue;
 					max_page=0x3f;
 					page_step=1;
@@ -176,13 +176,13 @@ int main(int argc, char *argv[]) {
 				if ((fmem_str=fopen(str,"r"))!=NULL) {
 					fclose(fmem_str);
 					PcdHalt();
-					if (use_gpio) bcm2835_gpio_write(gpio, LOW);
+					if (use_gpio) usbasp_gpio_write(gpio, LOW);
 					continue;
 				}
 				if ((fmem_str=fopen(str,"w"))==NULL) {
 					syslog(LOG_DAEMON|LOG_ERR,"Cant open file for write: %s",str);
 					PcdHalt();
-					if (use_gpio) bcm2835_gpio_write(gpio, LOW);
+					if (use_gpio) usbasp_gpio_write(gpio, LOW);
 					continue;
 				}
 				for (i=0;i<max_page;i+=page_step) {
@@ -193,11 +193,11 @@ int main(int argc, char *argv[]) {
 			}
 		}
 		PcdHalt();
-		if (use_gpio) bcm2835_gpio_write(gpio, LOW);
+		if (use_gpio) usbasp_gpio_write(gpio, LOW);
 	}
 
-	bcm2835_spi_end();
-	bcm2835_close();
+	usbasp_spi_end();
+	usbasp_close();
 	close_config_file();
 	return 0;
 
@@ -208,21 +208,21 @@ uint8_t HW_init(uint32_t spi_speed, uint8_t gpio) {
 	uint16_t sp;
 
 	sp=(uint16_t)(250000L/spi_speed);
-	if (!bcm2835_init()) {
-		syslog(LOG_DAEMON|LOG_ERR,"Can't init bcm2835!\n");
+	if (usbasp_init()) {
+		syslog(LOG_DAEMON|LOG_ERR,"Can't init usbasp!\n");
 		return 1;
 	}
 	if (gpio<28) {
-		bcm2835_gpio_fsel(gpio, BCM2835_GPIO_FSEL_OUTP);
-		bcm2835_gpio_write(gpio, LOW);
+		usbasp_gpio_fsel(gpio, USBASP_GPIO_FSEL_OUTP);
+		usbasp_gpio_write(gpio, LOW);
 	}
 
-	bcm2835_spi_begin();
-	bcm2835_spi_setBitOrder(BCM2835_SPI_BIT_ORDER_MSBFIRST);      // The default
-	bcm2835_spi_setDataMode(BCM2835_SPI_MODE0);                   // The default
-	bcm2835_spi_setClockDivider(sp); // The default
-	bcm2835_spi_chipSelect(BCM2835_SPI_CS0);                      // The default
-	bcm2835_spi_setChipSelectPolarity(BCM2835_SPI_CS0, LOW);      // the default
+	usbasp_spi_begin();
+	usbasp_spi_setBitOrder(USBASP_SPI_BIT_ORDER_MSBFIRST);      // The default
+	usbasp_spi_setDataMode(USBASP_SPI_MODE0);                   // The default
+	usbasp_spi_setClockDivider(sp); // The default
+	usbasp_spi_chipSelect(USBASP_SPI_CS0);                      // The default
+	usbasp_spi_setChipSelectPolarity(USBASP_SPI_CS0, LOW);      // the default
 	return 0;
 }
 
