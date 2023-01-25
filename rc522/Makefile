@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -g
-LIBS = -lusb-1.0 -L../../libusbasp -lusbasp
+LIBS = -L../../libusbasp -lusbasp -lusb-1.0
 INCLUDES = -I../../libusbasp/include
 
 SRCS = main.c rfid.c rc522.c config.c
@@ -9,7 +9,7 @@ OBJS = $(SRCS:.c=.o)
 all: libusbasp.a usbasp_read
 
 usbasp_read: libusbasp.a $(OBJS)
-	$(CC) $(LFLAGS) $(OBJS) -o usbasp_read $(LIBS)
+	$(CC) $(OBJS) -o usbasp_read $(LFLAGS) $(LIBS)
 
 libusbasp.a:
 	make -C ../../libusbasp
